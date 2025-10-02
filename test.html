@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guojam Cashier</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 600px;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #4a6bdf;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .form-container {
+            padding: 30px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        .input-group input:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #4a6bdf;
+            box-shadow: 0 0 0 2px rgba(74, 107, 223, 0.2);
+        }
+        
+        .input-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background: #4a6bdf;
+            color: white;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            background: #3a5bce;
+        }
+        
+        .btn:disabled {
+            background: #a0a0a0;
+            cursor: not-allowed;
+        }
+        
+        .btn-success {
+            background: #2ecc71;
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .result {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .success {
+            background: #e9f7ef;
+            border: 1px solid #2ecc71;
+            color: #27ae60;
+        }
+        
+        .error {
+            background: #fdecea;
+            border: 1px solid #e74c3c;
+            color: #c0392b;
+        }
+        
+        .order-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .order-info h3 {
+            margin-bottom: 10px;
+            color: #444;
+        }
+        
+        .status-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f7ff;
+            border-radius: 8px;
+            border-left: 4px solid #4a6bdf;
+        }
+        
+        .status-info h3 {
+            color: #4a6bdf;
+            margin-bottom: 10px;
+        }
+        
+        .polling-status {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .success-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            z-index: 1000;
+            display: none;
+            animation: fadeIn 0.5s;
+            border: 2px solid #2ecc71;
+            max-width: 80%;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .success-alert h2 {
+            color: #2ecc71;
+            margin-bottom: 15px;
+        }
+        
+        .success-alert .btn {
+            margin-top: 20px;
+            background: #2ecc71;
+        }
+        
+        .success-alert .btn:hover {
+            background: #27ae60;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+        
+        .api-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        .api-info h3 {
+            margin-bottom: 8px;
+            color: #444;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4a6bdf;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .order-link {
+            display: block;
+            margin-top: 15px;
+            padding: 12px;
+            background: #e7f3fe;
+            border-left: 4px solid #2196F3;
+            border-radius: 4px;
+            word-break: break-all;
+            text-decoration: none;
+            color: #1565C0;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        
+        .order-link:hover {
+            background: #d6e8fd;
+        }
+        
+        .response-data {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Guojam Cashier</h1>
+            <p>自动生成订单号，每5秒查询一次订单状态</p>
+        </div>
+        
+        <div class="form-container">
+            <div class="input-group">
+                <label for="api-url">创建订单API地址</label>
+                <input type="text" id="api-url" placeholder="请输入API地址" value="https://gc.guojam.fun/api.php">
+            </div>
+            
+            <div class="input-group">
+                <label for="query-api-url">查询订单API地址</label>
+                <input type="text" id="query-api-url" placeholder="请输入查询API地址" value="https://gc.guojam.fun/query.php">
+            </div>
+            
+            <div class="input-group">
+                <label for="out_trade_no">订单号</label>
+                <input type="text" id="out_trade_no" placeholder="系统自动生成时间戳订单号" readonly>
+            </div>
+            
+            <div class="input-group">
+                <label for="subject">商品名称</label>
+                <input type="text" id="subject" value="guojam大帅比">
+            </div>
+            
+            <div class="input-group">
+                <label for="total_fee">订单金额 (元)</label>
+                <input type="text" id="total_fee" value="0.1">
+            </div>
+            
+            <button class="btn" onclick="createOrder()">创建订单</button>
+            
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p style="margin-top: 10px;">正在创建订单，请稍候...</p>
+            </div>
+            
+            <div id="result" class="result"></div>
+            
+            <div id="status-info" class="status-info" style="display: none;">
+                <h3>订单状态查询</h3>
+                <p>正在查询订单状态，请勿关闭页面...</p>
+                <div class="polling-status" id="polling-status">下次查询: 5秒</div>
+                <div class="response-data" id="last-response"></div>
+            </div>
+            
+            <div class="api-info">
+                <h3>API 调用说明</h3>
+                <p>创建订单API将发送POST请求，参数包括：</p>
+                <ul style="margin: 10px 0 10px 20px;">
+                    <li>out_trade_no: 订单号</li>
+                    <li>subject: 商品名称</li>
+                    <li>total_fee: 订单金额</li>
+                </ul>
+                <p>查询订单API将发送GET请求，参数为订单号。</p>
+                <p>创建成功后，将返回支付链接。系统将每5秒自动查询订单状态。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="success-alert" id="success-alert">
+        <h2>支付成功！</h2>
+        <p>订单已支付完成，感谢购买。</p>
+        <button class="btn btn-success" onclick="closeAlert()">确定</button>
+    </div>
+
+    <script>
+        // 全局变量
+        let pollingInterval;
+        let pollingCounter = 0;
+        let remainingSeconds = 5;
+        let countdownInterval;
+        
+        // 生成时间戳订单号
+        function generateOrderNumber() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            return `${year}${month}${day}${hours}${minutes}${seconds}`;
+        }
+        
+        // 初始化设置
+        function initialize() {
+            // 设置默认订单号
+            document.getElementById('out_trade_no').value = generateOrderNumber();
+        }
+        
+        // 创建订单
+        function createOrder() {
+            // 获取输入值
+            const apiUrl = document.getElementById('api-url').value;
+            const outTradeNo = document.getElementById('out_trade_no').value;
+            const subject = document.getElementById('subject').value;
+            const totalFee = document.getElementById('total_fee').value;
+            
+            // 验证输入
+            if (!apiUrl) {
+                alert('请输入API地址');
+                return;
+            }
+            if (!outTradeNo || !subject || !totalFee) {
+                alert('请填写完整的订单信息');
+                return;
+            }
+            
+            // 显示加载中
+            const loading = document.getElementById('loading');
+            const resultDiv = document.getElementById('result');
+            loading.style.display = 'block';
+            resultDiv.style.display = 'none';
+            
+            // 准备表单数据
+            const formData = new FormData();
+            formData.append('out_trade_no', outTradeNo);
+            formData.append('subject', subject);
+            formData.append('total_fee', totalFee);
+            
+            // 发送POST请求到API
+            fetch(apiUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                resultDiv.style.display = 'block';
+                
+                if (data.status === 'success') {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h3>订单创建成功！</h3>
+                        <p>订单号: ${data.out_trade_no || outTradeNo}</p>
+                        ${data.pay_url ? `<a href="${data.pay_url}" target="_blank" class="order-link">点击这里完成支付</a>` : ''}
+                    `;
+                    
+                    // 显示状态查询区域
+                    document.getElementById('status-info').style.display = 'block';
+                    
+                    // 开始轮询查询订单状态
+                    startPolling(outTradeNo);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h3>订单创建失败</h3>
+                        <p>错误信息: ${data.message || '未知错误'}</p>
+                    `;
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>请求失败</h3>
+                    <p>错误信息: ${error.message}</p>
+                    <p>请检查API地址是否正确且支持跨域访问</p>
+                `;
+            });
+        }
+        
+        // 开始轮询查询订单状态
+        function startPolling(orderNumber) {
+            // 清除之前的轮询（如果有）
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+            }
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            // 重置计数器
+            pollingCounter = 0;
+            remainingSeconds = 5;
+            
+            // 更新状态显示
+            updatePollingStatus();
+            
+            // 立即执行第一次查询
+            checkOrderStatus(orderNumber);
+            
+            // 设置每5秒查询一次的定时器
+            pollingInterval = setInterval(() => {
+                checkOrderStatus(orderNumber);
+            }, 5000);
+            
+            // 更新剩余秒数的显示
+            countdownInterval = setInterval(() => {
+                remainingSeconds--;
+                updatePollingStatus();
+                
+                if (remainingSeconds <= 0) {
+                    remainingSeconds = 5;
+                }
+            }, 1000);
+        }
+        
+        // 更新轮询状态显示
+        function updatePollingStatus() {
+            document.getElementById('polling-status').textContent = 
+                `查询次数: ${pollingCounter} | 下次查询: ${remainingSeconds}秒`;
+        }
+        
+        // 查询订单状态
+        function checkOrderStatus(orderNumber) {
+            const queryApiUrl = document.getElementById('query-api-url').value;
+            const queryUrl = `${queryApiUrl}?order=${orderNumber}`;
+            
+            // 发送查询请求
+            fetch(queryUrl)
+            .then(response => response.json())
+            .then(data => {
+                pollingCounter++;
+                updatePollingStatus();
+                
+                // 显示最后一次响应数据
+                document.getElementById('last-response').textContent = JSON.stringify(data, null, 2);
+                
+                if (data.status === 'success') {
+                    // 支付成功，停止轮询并显示成功提示
+                    clearInterval(pollingInterval);
+                    clearInterval(countdownInterval);
+                    showSuccessAlert();
+                }
+                // 其他状态不需要特殊处理，继续轮询
+            })
+            .catch(error => {
+                console.error('查询订单状态失败:', error);
+                pollingCounter++;
+                updatePollingStatus();
+                document.getElementById('last-response').textContent = '查询失败: ' + error.message;
+            });
+        }
+        
+        // 显示支付成功提示
+        function showSuccessAlert() {
+            document.getElementById('success-alert').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+        
+        // 关闭成功提示
+        function closeAlert() {
+            document.getElementById('success-alert').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = function() {
+            initialize();
+        };
+    </script>
+</body>
+</html>
